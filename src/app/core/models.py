@@ -2,12 +2,9 @@ from django.db import models
 
 
 class Table(models.Model):
+    
     name = models.CharField(
         max_length=255
-    )
-    short_name = models.CharField(
-        max_length=20,
-        null=True
     )
     desc = models.TextField(
         null=True
