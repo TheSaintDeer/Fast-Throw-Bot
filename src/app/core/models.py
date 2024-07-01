@@ -9,6 +9,9 @@ class Table(models.Model):
     desc = models.TextField(
         null=True
     )
+    url = models.URLField(
+        max_length=1024
+    )
     tags = models.ManyToManyField(
         'Tag',
     )
@@ -25,6 +28,9 @@ class Tag(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+    
+    class Meta:
+        ordering = ["name"]
 
 
 class Entry(models.Model):

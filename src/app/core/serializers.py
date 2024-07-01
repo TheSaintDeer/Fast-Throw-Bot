@@ -37,4 +37,4 @@ class TableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Table
-        fields = ['name', 'desc', 'tags', 'number_of_entries', 'entries']
+        fields = ['name', 'desc', 'url', 'tags', 'number_of_entries', 'entries']
