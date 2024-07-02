@@ -29,4 +29,4 @@ class TableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Table
-        fields = ['name', 'desc', 'url', 'number_of_entries', 'entries']
+        fields = ['name', 'desc', 'url', 'entries']

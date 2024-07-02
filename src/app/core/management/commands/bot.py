@@ -6,19 +6,30 @@ from telebot.types import Message
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-import core.management.commands.messages as m
-
 base_url = 'http://127.0.0.1:8000/api/'
 bot = telebot.TeleBot(settings.API_KEY)
 
+start_answer = '''
+View all tables: /tables
+Roll the dice on one of them: /roll {Table}
+Show entire table: /show {Table}
+Search tables by keyword: /search {Keyword}
+'''
+
+def send_all_tables(json_list):
+    text = ''
+    for jl in json_list:
+        text += f"{jl['name']}. {jl['desc']}\n\n"
+    return text
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message: Message):
-    bot.send_message(message.chat.id, m.start_answer)
+    bot.send_message(message.chat.id, start_answer)
 
 @bot.message_handler(commands=['tables'])
 def show_tables(message: Message):
     r = requests.get(base_url+'table/')
-    bot.send_message(message.chat.id, m.send_all_tables(r.json()))
+    bot.send_message(message.chat.id, send_all_tables(r.json()))
 
 @bot.message_handler(regexp='^\/roll .{1,20}$')   
 def roll_dice(message: Message):
@@ -38,8 +49,13 @@ def show_entries(message: Message):
     bot.send_message(message.chat.id, r.json()['url'])
 
 @bot.message_handler(regexp='^\/search .{1,20}$')
-def show_all_tags(message: Message):
-    pass #search by keyword
+def search_by_keyword(message: Message):
+    keyword = message.text[8:]
+    print(keyword)
+    r = requests.get(base_url+'table/search/', data={
+        'keyword': keyword
+    })
+    bot.send_message(message.chat.id, send_all_tables(r.json()))
 
 
 class Command(BaseCommand):

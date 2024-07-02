@@ -35,6 +35,16 @@ class TableViewSet(viewsets.ModelViewSet):
         entries = models.Table.objects.filter(name=request.data['name']).values('entries__text')
         entry = services.get_random_entry(entries)
         return Response({'entry': entry['entries__text']})
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        tables = models.Table.objects.filter(name__icontains=request.data['keyword'])
+        serializer = serializers.TableSerializer(tables, many=True, fields=(
+            'pk',
+            'name', 
+            'desc',
+        ))
+        return Response(serializer.data)
 
 
 class EntryViewSet(viewsets.ModelViewSet):
