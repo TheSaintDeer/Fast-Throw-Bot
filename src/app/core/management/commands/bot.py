@@ -22,40 +22,57 @@ def send_all_tables(json_list):
         text += f"{jl['name']}. {jl['desc']}\n\n"
     return text
 
+def send_request(msg: Message, url, data=None):
+    try:
+        return requests.get(url, data=data)
+    except:
+        bot.send_message(msg.chat.id, 'Something has gone wrong.')
+        return False
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message: Message):
     bot.send_message(message.chat.id, start_answer)
 
 @bot.message_handler(commands=['tables'])
 def show_tables(message: Message):
-    r = requests.get(base_url+'table/')
-    bot.send_message(message.chat.id, send_all_tables(r.json()))
+    r = send_request(message, base_url+'table/')
+    if r.status_code == 200:
+        bot.send_message(message.chat.id, send_all_tables(r.json()))
+    else:
+        bot.send_message(message.chat.id, 'Something has gone wrong.')
 
 @bot.message_handler(regexp='^\/roll .{1,20}$')   
 def roll_dice(message: Message):
     table = message.text[6:]
-    r = requests.get(base_url+'table/roll/', data={
+    r = send_request(message, base_url+'table/roll/', data={
         'name': table
     })
-    entry = r.json()['entry']
-    bot.send_message(message.chat.id, entry)
+    if r.status_code == 200:
+        bot.send_message(message.chat.id, r.json()['entry'])
+    else:
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{table}"?')
 
 @bot.message_handler(regexp='^\/show .{1,20}$')
 def show_entries(message: Message):
     table = message.text[6:]
-    r = requests.get(base_url+'table/full/', data={
+    r = send_request(message, base_url+'table/full/', data={
         'name': table
     })
-    bot.send_message(message.chat.id, r.json()['url'])
+    if r.status_code == 200:
+        bot.send_message(message.chat.id, r.json()['url'])
+    else:
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{table}"?')
 
 @bot.message_handler(regexp='^\/search .{1,20}$')
 def search_by_keyword(message: Message):
     keyword = message.text[8:]
-    print(keyword)
-    r = requests.get(base_url+'table/search/', data={
+    r = send_request(message, base_url+'table/search/', data={
         'keyword': keyword
     })
-    bot.send_message(message.chat.id, send_all_tables(r.json()))
+    if r.status_code == 200:
+        bot.send_message(message.chat.id, send_all_tables(r.json()))
+    else:
+        bot.send_message(message.chat.id, f'Any not found.')
 
 
 class Command(BaseCommand):
