@@ -3,13 +3,6 @@ from rest_framework import serializers
 from . import models
 
 
-class TagSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Tag
-        fields = ['name']
-
-
 class EntrySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -19,7 +12,6 @@ class EntrySerializer(serializers.ModelSerializer):
 
 class TableSerializer(serializers.ModelSerializer):
     entries = serializers.StringRelatedField(many=True, read_only=True)
-    tags = TagSerializer(many=True)
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
@@ -37,4 +29,4 @@ class TableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Table
-        fields = ['name', 'desc', 'url', 'tags', 'number_of_entries', 'entries']
+        fields = ['name', 'desc', 'url', 'number_of_entries', 'entries']

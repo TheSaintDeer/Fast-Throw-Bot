@@ -35,21 +35,12 @@ def show_entries(message: Message):
     r = requests.get(base_url+'table/full/', data={
         'name': table
     })
-    url = r.json()['url']
-    bot.send_message(message.chat.id, url)
+    bot.send_message(message.chat.id, r.json()['url'])
 
-@bot.message_handler(commands=['tags'])
+@bot.message_handler(regexp='^\/search .{1,20}$')
 def show_all_tags(message: Message):
-    r = requests.get(base_url+'tag/')
-    bot.send_message(message.chat.id, m.send_all_tags(r.json()))
+    pass #search by keyword
 
-@bot.message_handler(regexp='^\/tag .{1,20}$')
-def search_by_tag(message: Message):
-    tag = message.text[5:]
-    r = requests.get(base_url+'tag/search_by_tags/', data={
-        'name': tag
-    })
-    bot.send_message(message.chat.id, m.send_table_by_tag(r.json()))
 
 class Command(BaseCommand):
     help = "Run the bot"

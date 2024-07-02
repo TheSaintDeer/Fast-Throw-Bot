@@ -12,25 +12,9 @@ class Table(models.Model):
     url = models.URLField(
         max_length=1024
     )
-    tags = models.ManyToManyField(
-        'Tag',
-    )
-    number_of_entries = models.IntegerField()
 
     def __str__(self):
         return f'{self.name}'
-
-
-class Tag(models.Model):
-    name = models.CharField(
-        max_length=64
-    )
-
-    def __str__(self):
-        return f'{self.name}'
-    
-    class Meta:
-        ordering = ["name"]
 
 
 class Entry(models.Model):

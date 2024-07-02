@@ -16,7 +16,6 @@ class TableViewSet(viewsets.ModelViewSet):
             'pk',
             'name', 
             'desc',
-            'tags', 
         ))
         return Response(serializer.data)
     
@@ -41,18 +40,3 @@ class TableViewSet(viewsets.ModelViewSet):
 class EntryViewSet(viewsets.ModelViewSet):
     queryset = models.Entry.objects.all()
     serializer_class = serializers.EntrySerializer
-
-
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = models.Tag.objects.all()
-    serializer_class = serializers.TagSerializer
-
-    @action(detail=False, methods=['get'])
-    def search_by_tags(self, request):
-        tag = models.Tag.objects.get(name=request.data['name'])
-        serializer = serializers.TableSerializer(tag.table_set.all(), many=True, fields=(
-            'pk',
-            'name', 
-            'desc',
-        ))
-        return Response(serializer.data)
