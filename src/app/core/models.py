@@ -5,9 +5,13 @@ class TelegramChat(models.Model):
     chat_id = models.CharField(
         max_length=10,
     )
-    pinnned = models.ManyToManyField(
-        'Table'
+    favorite_tables = models.ManyToManyField(
+        'Table',
+        blank=True
     )
+
+    def __str__(self):
+        return f'{self.chat_id}'
 
 
 class Table(models.Model):
@@ -24,7 +28,7 @@ class Table(models.Model):
 
     def __str__(self):
         return f'{self.name}'
-
+    
 
 class Entry(models.Model):
     table = models.ForeignKey(

@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseNotFound
 from rest_framework import viewsets
+from rest_framework import mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -46,12 +47,12 @@ class TableViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def full(self, request):
         queryset = models.Table.objects.all()
-        table = get_object_or_404(queryset, name=request.data['name'])
+        table = get_object_or_404(queryset, pk=request.data['pk'])
         return Response({'url': table.url})
     
     @action(detail=False, methods=['get'])
     def roll(self, request):
-        entries = models.Table.objects.filter(name=request.data['name']).values('entries__text')
+        entries = models.Table.objects.filter(pk=request.data['pk']).values('entries__text')
         if not entries:
             return HttpResponseNotFound()
         entry = services.get_random_entry(entries)
@@ -80,6 +81,15 @@ class TableViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class EntryViewSet(viewsets.ModelViewSet):
+class EntryViewSet(mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     queryset = models.Entry.objects.all()
     serializer_class = serializers.EntrySerializer
+
+
+class TelegramChatViewSet(mixins.RetrieveModelMixin,
+                          mixins.ListModelMixin,
+                          viewsets.GenericViewSet):
+    queryset = models.TelegramChat.objects.all()
+    serializer_class = serializers.TelegramChatSerializer

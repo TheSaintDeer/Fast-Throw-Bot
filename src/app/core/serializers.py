@@ -30,3 +30,10 @@ class TableSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Table
         fields = ['pk', 'name', 'desc', 'url', 'entries']
+
+
+class TelegramChatSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.TelegramChat
+        fields = ['chat_id', 'favorite_tables']

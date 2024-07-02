@@ -11,25 +11,27 @@ base_url = 'http://127.0.0.1:8000/api/'
 bot = telebot.TeleBot(settings.API_KEY)
 
 start_answer = '''
+Show commands: /help
 View all tables: /tables
     Previous page: /prev
     Next page: /next
     Certen page: /page {Page}
-Roll the dice on one of them: /roll {Table}
-Show entire table: /show {Table}
+Roll the dice on one of them: /roll {Table's ID}
+Show entire table: /show {Table's ID}
 Search tables by keyword: /search {Keyword}
+Add to favorite: /save {Table}
 '''
 
 def send_all_tables(json_list, pagination=False):
     text = ''
     for jl in json_list:
-        text += f"{jl['name']}. {jl['desc']}\n\n"
+        text += f"{jl['pk']}. <b>{jl['name']}</b> - {jl['desc']}\n\n"
 
     if pagination:
         text += '/prev\t/next'
     return text
 
-def send_request(id, url, data=None):
+def send_get_request(id, url, data=None):
     try:
         return requests.get(url, data=data)
     except:
@@ -43,7 +45,7 @@ def get_or_create_context(id):
         context[id] = {"page": 0}
     return context
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def send_welcome(message: Message):
     bot.send_message(message.chat.id, start_answer)
 
@@ -70,47 +72,58 @@ def next(message: Message):
 @bot.message_handler(commands=['tables'])
 def show_tables(message: Message):
     ctx = get_or_create_context(message.chat.id)
-    r = send_request(
+    r = send_get_request(
         message.chat.id, 
         base_url+'table/?limit=20&offset='+str(ctx[message.chat.id]["page"]*20)
     )
     if r.status_code == 200:
-        bot.send_message(message.chat.id, send_all_tables(r.json()['results'], pagination=True))
+        bot.send_message(message.chat.id, send_all_tables(r.json()['results'], pagination=True), parse_mode='HTML')
     else:
         bot.send_message(message.chat.id, 'Something has gone wrong.')
 
-@bot.message_handler(regexp='^\/roll .{1,20}$')   
+@bot.message_handler(commands=['roll'])   
 def roll_dice(message: Message):
-    table = message.text[6:]
-    r = send_request(message.chat.id, base_url+'table/roll/', data={
-        'name': table
+    pk = message.text[6:]
+    r = send_get_request(message.chat.id, base_url+'table/roll/', data={
+        'pk': pk
     })
     if r.status_code == 200:
         bot.send_message(message.chat.id, r.json()['entry'])
     else:
-        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{table}"?')
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
 
-@bot.message_handler(regexp='^\/show .{1,20}$')
+@bot.message_handler(commands=['show'])
 def show_entries(message: Message):
-    table = message.text[6:]
-    r = send_request(message.chat.id, base_url+'table/full/', data={
-        'name': table
+    pk = message.text[6:]
+    r = send_get_request(message.chat.id, base_url+'table/full/', data={
+        'pk': pk
     })
     if r.status_code == 200:
         bot.send_message(message.chat.id, r.json()['url'])
     else:
-        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{table}"?')
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
 
-@bot.message_handler(regexp='^\/search .{1,20}$')
+@bot.message_handler(commands=['search'])
 def search_by_keyword(message: Message):
     keyword = message.text[8:]
-    r = send_request(message.chat.id, base_url+'table/search/', data={
+    r = send_get_request(message.chat.id, base_url+'table/search/', data={
         'keyword': keyword
     })
     if r.status_code == 200:
-        bot.send_message(message.chat.id, send_all_tables(r.json()['results'][:20]))
+        bot.send_message(message.chat.id, send_all_tables(r.json()['results'][:20]), parse_mode='HTML')
     else:
         bot.send_message(message.chat.id, f'Any not found.')
+
+@bot.message_handler(commands=['save'])
+def save_to_favorite(message: Message):
+    table = message.text[5:]
+    r = requests.post(
+        base_url+'telegram_chat/',
+        data={
+            'chat_id': message.chat.id,
+            'table': table
+        }
+    )
 
 
 class Command(BaseCommand):
