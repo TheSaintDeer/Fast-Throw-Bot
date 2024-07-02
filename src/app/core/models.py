@@ -1,6 +1,15 @@
 from django.db import models
 
 
+class TelegramChat(models.Model):
+    chat_id = models.CharField(
+        max_length=10,
+    )
+    pinnned = models.ManyToManyField(
+        'Table'
+    )
+
+
 class Table(models.Model):
     
     name = models.CharField(
