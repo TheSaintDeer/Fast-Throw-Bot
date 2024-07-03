@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http import HttpResponseNotFound
 from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
@@ -19,64 +19,51 @@ class TableViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.TableSerializer
 
     def list(self, request, *args, **kwargs):
-        queryset = models.Table.objects.all()
+        tables = get_list_or_404(models.Table)
+        page = self.paginate_queryset(tables)
 
-        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, fields=(
-                'pk',
-                'name', 
-                'desc',
-            ))
+                'pk', 'name', 'desc',))
             return self.get_paginated_response(serializer.data)
         
-        serializer = self.get_serializer(queryset, many=True, fields=(
-            'pk',
-            'name', 
-            'desc',
-        ))
+        serializer = self.get_serializer(tables, many=True, fields=(
+            'pk', 'name', 'desc',))
         return Response(serializer.data)
     
     def retrieve(self, request, pk=None, *args, **kwargs):
-        queryset = models.Table.objects.all()
-        table = get_object_or_404(queryset, pk=pk)
+        table = get_object_or_404(models.Table, pk=pk)
         serializer = self.get_serializer(table)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def full(self, request):
-        queryset = models.Table.objects.all()
-        table = get_object_or_404(queryset, pk=request.data['pk'])
+        table = get_object_or_404(models.Table, pk=request.data['pk'])
         return Response({'url': table.url})
     
     @action(detail=False, methods=['get'])
     def roll(self, request):
-        entries = models.Table.objects.filter(pk=request.data['pk']).values('entries__text')
+        entries = get_list_or_404(models.Table.objects.all().values('entries__text'), pk=request.data['pk'])
         if not entries:
             return HttpResponseNotFound()
+        
         entry = services.get_random_entry(entries)
         return Response({'entry': entry['entries__text']})
     
     @action(detail=False, methods=['get'])
     def search(self, request):
-        queryset = models.Table.objects.filter(name__icontains=request.data['keyword'])
-        if not queryset: 
+        tables = get_list_or_404(models.Table, name__icontains=request.data['keyword'])
+        if not tables: 
             return HttpResponseNotFound()
         
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(tables)
         if page is not None:
             serializer = self.get_serializer(page, many=True, fields=(
-                'pk',
-                'name', 
-                'desc',
-            ))
+                'pk', 'name', 'desc',))
             return self.get_paginated_response(serializer.data)
         
-        serializer = self.get_serialize(queryset, many=True, fields=(
-            'pk',
-            'name', 
-            'desc',
-        ))
+        serializer = self.get_serialize(tables, many=True, fields=(
+                'pk', 'name', 'desc',))
         return Response(serializer.data)
 
 
@@ -93,14 +80,11 @@ class TelegramChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def favorites(self, request, *args, **kwargs):
-        queryset = models.TelegramChat.objects.\
-            filter(chat_id=request.data['chat_id'])
+        chat = models.TelegramChat.objects.\
+            filter(chat_id=request.data['chat_id']).first()
             
-        # print(request.data)
-        # print(queryset[0].favorite_tables.all()[0])
-        # print(type(queryset[0].favorite_tables.all()[0]))
         serializer = serializers.TableSerializer(
-            queryset[0].favorite_tables.all(), 
+            chat.favorite_tables.all(), 
             many=True, 
             fields=(
                 'pk',
@@ -109,7 +93,6 @@ class TelegramChatViewSet(viewsets.ModelViewSet):
         ))
 
         return Response(serializer.data)
-        # return Response({'data': 'OK'})
             
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -139,7 +122,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['delete'])
     def delete(self, request, *args, **kwargs):
         instance = get_object_or_404(
-            models.Favorite.objects.all(),
+            models.Favorite,
             telegramchat__chat_id=request.data['telegramchat'],
             table__pk=request.data['table']
         )

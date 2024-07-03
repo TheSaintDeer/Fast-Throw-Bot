@@ -76,6 +76,10 @@ def next(message: Message):
 @bot.message_handler(commands=['page'])
 def next(message: Message):
     page = message.text[6:]
+    try:
+        page = int(page)
+    except:
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{page}"?')
     ctx = get_or_create_context(message.chat.id)
     ctx[message.chat.id]["page"] += int(page-1)
     show_tables(message)
@@ -95,22 +99,22 @@ def show_tables(message: Message):
 @bot.message_handler(commands=['roll'])   
 def roll_dice(message: Message):
     pk, *count = message.text[6:].split()
+    c = [1]
     if count:
-        c = []
         try:
             c = range(int(count[0]))
         except:
             bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{count[0]}"?')
 
-        for i in c:
-            r = send_get_request(message.chat.id, base_url+'table/roll/', data={
-                'pk': pk
-            })
-            if r.status_code == 200:
-                bot.send_message(message.chat.id, r.json()['entry'])
-            else:
-                bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
-                return
+    for i in c:
+        r = send_get_request(message.chat.id, base_url+'table/roll/', data={
+            'pk': pk
+        })
+        if r.status_code == 200:
+            bot.send_message(message.chat.id, r.json()['entry'])
+        else:
+            bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
+            return
 
 @bot.message_handler(commands=['show'])
 def show_entries(message: Message):
