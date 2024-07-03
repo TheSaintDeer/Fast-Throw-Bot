@@ -1,7 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseNotFound
-from rest_framework import viewsets
-from rest_framework import mixins
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -88,8 +87,31 @@ class EntryViewSet(mixins.RetrieveModelMixin,
     serializer_class = serializers.EntrySerializer
 
 
-class TelegramChatViewSet(mixins.RetrieveModelMixin,
-                          mixins.ListModelMixin,
-                          viewsets.GenericViewSet):
+class TelegramChatViewSet(viewsets.ModelViewSet):
     queryset = models.TelegramChat.objects.all()
     serializer_class = serializers.TelegramChatSerializer
+
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    queryset = models.Favorite.objects.all()
+    serializer_class = serializers.FavoriteSerializer
+
+    def create(self, request, *args, **kwargs):
+        telegramchat, created = models.TelegramChat.objects.get_or_create(
+            chat_id=request.data['telegramchat']
+        )
+        table = get_object_or_404(models.Table.objects.all(), pk=request.data['table']) 
+
+        if not telegramchat.favorite_set.filter(table__pk=table.pk):
+            serializer = serializers.FavoriteSerializer(
+                data={
+                    'telegramchat': telegramchat.pk, 
+                    'table': table.pk
+            })
+
+            if serializer.is_valid():
+                serializer.save()
+
+            return Response(serializer.data)
+        
+        return HttpResponseNotFound()

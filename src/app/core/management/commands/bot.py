@@ -22,6 +22,10 @@ Search tables by keyword: /search {Keyword}
 Add to favorite: /save {Table}
 '''
 
+'''
+/roll Table Count - прокинуть сразу несколько раз по одной таблице
+'''
+
 def send_all_tables(json_list, pagination=False):
     text = ''
     for jl in json_list:
@@ -34,6 +38,13 @@ def send_all_tables(json_list, pagination=False):
 def send_get_request(id, url, data=None):
     try:
         return requests.get(url, data=data)
+    except:
+        bot.send_message(id, 'Something has gone wrong.')
+        return False
+    
+def send_post_request(id, url, data=None):
+    try:
+        return requests.post(url, data=data)
     except:
         bot.send_message(id, 'Something has gone wrong.')
         return False
@@ -83,14 +94,23 @@ def show_tables(message: Message):
 
 @bot.message_handler(commands=['roll'])   
 def roll_dice(message: Message):
-    pk = message.text[6:]
-    r = send_get_request(message.chat.id, base_url+'table/roll/', data={
-        'pk': pk
-    })
-    if r.status_code == 200:
-        bot.send_message(message.chat.id, r.json()['entry'])
-    else:
-        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
+    pk, *count = message.text[6:].split()
+    if count:
+        c = []
+        try:
+            c = range(int(count[0]))
+        except:
+            bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{count[0]}"?')
+
+        for i in c:
+            r = send_get_request(message.chat.id, base_url+'table/roll/', data={
+                'pk': pk
+            })
+            if r.status_code == 200:
+                bot.send_message(message.chat.id, r.json()['entry'])
+            else:
+                bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
+                return
 
 @bot.message_handler(commands=['show'])
 def show_entries(message: Message):
@@ -116,15 +136,21 @@ def search_by_keyword(message: Message):
 
 @bot.message_handler(commands=['save'])
 def save_to_favorite(message: Message):
-    table = message.text[5:]
-    r = requests.post(
-        base_url+'telegram_chat/',
+    pk = message.text[6:]
+    r = send_post_request(
+        message.chat.id,
+        base_url+'favorite/',
         data={
-            'chat_id': message.chat.id,
-            'table': table
+            'telegramchat': message.chat.id,
+            'table': pk
         }
     )
-
+    if r.status_code == 200:
+        bot.send_message(message.chat.id, 'Table was added to favorites.')
+    elif r.status_code == 500:
+        bot.send_message(message.chat.id, f'You may have entered the table name incorrectly. Did you mean to introduce "{pk}"?')
+    else:
+        bot.send_message(message.chat.id, 'Table has already been saved previously.')
 
 class Command(BaseCommand):
     help = "Run the bot"

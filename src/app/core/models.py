@@ -7,7 +7,8 @@ class TelegramChat(models.Model):
     )
     favorite_tables = models.ManyToManyField(
         'Table',
-        blank=True
+        blank=True,
+        through='Favorite'
     )
 
     def __str__(self):
@@ -43,3 +44,14 @@ class Entry(models.Model):
     
     class Meta:
         verbose_name_plural = "entries"
+
+
+class Favorite(models.Model):
+    telegramchat = models.ForeignKey(
+        'TelegramChat',
+        on_delete=models.CASCADE
+    )
+    table = models.ForeignKey(
+        'Table',
+        on_delete=models.CASCADE
+    )

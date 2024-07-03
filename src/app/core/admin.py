@@ -6,3 +6,4 @@ from . import models
 admin.site.register(models.Table)
 admin.site.register(models.Entry)
 admin.site.register(models.TelegramChat)
+admin.site.register(models.Favorite)
