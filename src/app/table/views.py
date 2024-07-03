@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseNotFound
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -91,6 +91,26 @@ class TelegramChatViewSet(viewsets.ModelViewSet):
     queryset = models.TelegramChat.objects.all()
     serializer_class = serializers.TelegramChatSerializer
 
+    @action(detail=False, methods=["get"])
+    def favorites(self, request, *args, **kwargs):
+        queryset = models.TelegramChat.objects.\
+            filter(chat_id=request.data['chat_id'])
+            
+        # print(request.data)
+        # print(queryset[0].favorite_tables.all()[0])
+        # print(type(queryset[0].favorite_tables.all()[0]))
+        serializer = serializers.TableSerializer(
+            queryset[0].favorite_tables.all(), 
+            many=True, 
+            fields=(
+                'pk',
+                'name', 
+                'desc',
+        ))
+
+        return Response(serializer.data)
+        # return Response({'data': 'OK'})
+            
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = models.Favorite.objects.all()
@@ -103,7 +123,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         table = get_object_or_404(models.Table.objects.all(), pk=request.data['table']) 
 
         if not telegramchat.favorite_set.filter(table__pk=table.pk):
-            serializer = serializers.FavoriteSerializer(
+            serializer = self.get_serializer(
                 data={
                     'telegramchat': telegramchat.pk, 
                     'table': table.pk
@@ -115,3 +135,15 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         
         return HttpResponseNotFound()
+    
+    @action(detail=False, methods=['delete'])
+    def delete(self, request, *args, **kwargs):
+        instance = get_object_or_404(
+            models.Favorite.objects.all(),
+            telegramchat__chat_id=request.data['telegramchat'],
+            table__pk=request.data['table']
+        )
+        instance.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
