@@ -24,7 +24,15 @@ class Table(models.Model):
         null=True
     )
     url = models.URLField(
-        max_length=1024
+        max_length=1024,
+        null=True,
+        blank=True
+    )
+    author = models.ForeignKey(
+        'TelegramChat',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
