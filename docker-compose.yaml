@@ -7,10 +7,10 @@ services:
       context: ./src
     ports: 
       - "8000:8000"
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python ./app/manage.py runserver 0.0.0.0:8000
 
   bot:
     restart: always
     build: 
       context: ./src
-    command: python manage.py runbot
+    command: python ./app/manage.py runbot
