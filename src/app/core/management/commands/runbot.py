@@ -60,8 +60,6 @@ def get_or_create_context(id, type_list=None):
         context[id] = dict()
         context[id] = {"page": 0, "type": type_list}
 
-    print('get_or_create_context', context[id], type_list)
-
     if context[id]['type'] != type_list != None:
         context[id] = dict()
         context[id] = {"page": 0, "type": type_list}
@@ -87,8 +85,6 @@ def prev(message: Message):
 def next(message: Message):
     ctx = get_or_create_context(message.chat.id)
     ctx[message.chat.id]["page"] += 1
-
-    print('next', ctx[message.chat.id])
 
     if ctx[message.chat.id]["type"] == 0:
         show_tables(message)
