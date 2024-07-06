@@ -10,6 +10,7 @@ router = routers.DefaultRouter()
 router.register(r'table', views.TableViewSet)
 router.register(r'entry', views.EntryViewSet)
 router.register(r'telegram_chat', views.TelegramChatViewSet)
+router.register(r'favorite', views.FavoriteViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),

@@ -29,7 +29,7 @@ class TableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Table
-        fields = ['pk', 'name', 'desc', 'url', 'entries']
+        fields = ['pk', 'name', 'desc', 'url', 'author', 'entries']
 
 
 class TelegramChatSerializer(serializers.ModelSerializer):
@@ -37,3 +37,10 @@ class TelegramChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TelegramChat
         fields = ['chat_id', 'favorite_tables']
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = models.Favorite
+        fields = ['telegramchat', 'table']

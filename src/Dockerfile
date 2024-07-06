@@ -1,6 +1,5 @@
 FROM python:3.9
-RUN apt-get update -y
-RUN apt-get upgrade -y
+ENV PYTHONUNBUFFERED=1
 
 # set work directory
 WORKDIR /src
@@ -12,6 +11,4 @@ RUN pip install -r requirements.txt
 
 # copy project
 COPY ./app ./app
-
-# run project
-CMD ["python3", "./app/manage.py", "runserver", "0.0.0.0:8000"]
+COPY ./start.sh ./start.sh
