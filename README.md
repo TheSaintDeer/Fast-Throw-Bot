@@ -7,9 +7,7 @@ Telegram is a bot for playing DnD, where you can roll a cube for certain tables 
 - DRF
 - Docker
 
-## Functional
-
-## Installation
+## Installation and Run 
 Need to install docker-compose!!!
 - `git clone https://github.com/TheSaintDeer/Fast-Throw-Bot.git`
 - `docker-compose up --build`
